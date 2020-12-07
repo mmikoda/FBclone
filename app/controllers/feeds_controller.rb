@@ -9,7 +9,11 @@ class FeedsController < ApplicationController
   end
 
   def new
-    @feed = Feed.new
+    if params[:back]
+      @feed = Feed.new(feed_params)
+    else
+      @feed = Feed.new
+    end
   end
 
   def edit
@@ -18,14 +22,24 @@ class FeedsController < ApplicationController
   def create
     @feed = current_user.feeds.build(feed_params)
     respond_to do |format|
-      if @feed.save
-        format.html { redirect_to @feed, notice: 'Feed was successfully created.' }
-        format.json { render :show, status: :created, location: @feed }
-      else
+      if params[:back]
         format.html { render :new }
         format.json { render json: @feed.errors, status: :unprocessable_entity }
+      else
+        if @feed.save
+          format.html { redirect_to @feed, notice: 'Feed was successfully created.' }
+          format.json { render :show, status: :created, location: @feed }
+        else
+          format.html { render :new }
+          format.json { render json: @feed.errors, status: :unprocessable_entity }
+        end
       end
     end
+  end
+
+  def confirm
+    @feed = current_user.feeds.build(feed_params)
+    render :new if @feed.invalid?
   end
 
   def update
